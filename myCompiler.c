@@ -7,14 +7,20 @@
 #define MAX_LINE    70 /*70 character max per line*/
 
 
-int main(){
 
-    printf("%s","Welcome to Our Shell we support most of the common commands and few others use help command for more information");
+int main(){
+    FILE *f; // this file will save history
     bool isRunning = true;
     char input[50];
     pid_t pid;
     int lastPos; // will be required for waiting / not-waiting child process to end
     int  getVal;
+    printf("%s","Welcome to Our Shell we support most of the common commands and few others use help command for more information");
+
+    f = fopen("history.txt", "w+");
+	fclose(f);
+
+
     while(isRunning){
         printf("\nhome/kimo/Desktop>");
         fflush(stdout); /*######*/
@@ -37,7 +43,9 @@ int main(){
         }
         else //parent
         {
-            
+            // Wait for child to finish execution unless user ends with '&' (reversing the original part of the problem)
+			lastPos = strlen(temp) - 1;
+			if (temp[lastPos] != '&') wait(NULL);
         }
 
         return 0;
@@ -63,7 +71,17 @@ int execute(char *command){
     // we need to add null at the end of args so that we can use execvp
 	args[i] = NULL;
 
-    if(command[0]=='c' && command[1]=='d'){
+    if (!strcmp(command, "exit"){
+        exit(0);
+    }
+    if (!strcmp(command, "help"))	
+	{ 
+		printf("%s", "\nfirstword: prints the first word of the fil.\nmostrepeat: prints the most repeated word in the file."); 
+		fflush(stdin);
+		fflush(stdout);
+		return 1;
+	}
+    else if(command[0]=='c' && command[1]=='d'){
         return 1;
     }
     else if (!strcmp(command, "firstword")){
