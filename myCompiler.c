@@ -20,6 +20,8 @@ int main(){
         fflush(stdout); /*######*/
 
         fgets(input, 50, stdin);
+        // If nothing is written, the loop is executed again
+		if((input = strtok(line," \n\t")) == NULL) continue;
         pid = fork();
         if (pid<0){
             fprintf(stderr,"ERROR\n");
@@ -44,10 +46,38 @@ int main(){
 
 
 int execute(char *command){
+    char *args[MAX_LINE/2 + 1];	/* command line (of 80) has max of 40 arguments */
+	char *words;
+    int i,val;
+
+    // split the read input in words for the sake of args
+	words = strtok(command, " ");
+	i = 0;
+	while(words != NULL)
+	{
+		if (strcmp(words, "&"))
+			args[i] = words;
+		i++;
+		words = strtok(NULL, " ");
+	}
+    // we need to add null at the end of args so that we can use execvp
+	args[i] = NULL;
+
     if(command[0]=='c' && command[1]=='d'){
         return 1;
     }
-    return 0;
+    else if (!strcmp(command, "firstword")){
+        firstword();
+        return 1;
+    }
+    else if (!strcmp(command, "mostrepeat")){
+        mostrepeat();
+        return 1;
+    }
+    //most common command
+    val = execvp(args[0], args);
+    
+    return val;
 }
 int firstword(FILE *fp) {
     int echo, chr;
@@ -69,8 +99,8 @@ int mostrepeat(FILE *fptr) {
     char words[MAX_WORDS][50];
     char word[50];
     int  count[MAX_WORDS];
-    printf("Enter file path: ");
-    scanf("%s", path);
+    // printf("Enter file path: ");
+    // scanf("%s", path);
     fptr = fopen(path, "r");
     if (fptr == NULL)
     {
