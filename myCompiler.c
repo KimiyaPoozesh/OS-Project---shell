@@ -9,33 +9,33 @@
 
 int main(){
 
-    printf("%s","Welcome to Our Shell, we support most of the common
-    commands and few others :)... use help command for more
-    information");
+    printf("%s","Welcome to Our Shell we support most of the common commands and few others use help command for more information");
     bool isRunning = true;
-    char input[70];
-    int pid;
+    char input[50];
+    pid_t pid;
+    int lastPos; // will be required for waiting / not-waiting child process to end
+    int  getVal;
     while(isRunning){
         printf("\nhome/kimo/Desktop>");
         fflush(stdout); /*######*/
 
-        gets(input);
+        fgets(input, 50, stdin);
         pid = fork();
         if (pid<0){
-            fprintf(stderr,"ERROR\n")
+            fprintf(stderr,"ERROR\n");
         }
         else if (pid==0){
             getVal = execute(input);
             if (getVal ==1 ){
-            continue
+            continue;
             }
             else{
-            printf("Sorry this command is not supported")
+            printf("Sorry this command is not supported");
             }
         }
         else //parent
         {
-
+            
         }
 
         return 0;
@@ -45,8 +45,9 @@ int main(){
 
 int execute(char *command){
     if(command[0]=='c' && command[1]=='d'){
-        
+        return 1;
     }
+    return 0;
 }
 int firstword(FILE *fp) {
     int echo, chr;
