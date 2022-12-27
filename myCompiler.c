@@ -4,9 +4,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <sys/wait.h>
+#include <signal.h>
 #define MAX_WORDS   1000
 #define MAX_LINE    70 /*70 character max per line*/
 int histItems = 0;
+int no_reprint_prmpt;
 void shellPrompt(){
 	// We print the prompt
     //getcwd return the name of the currentDirectory
@@ -253,7 +256,13 @@ printf("%s", line);}
 fclose(file);
 return 0;
 }
+void sigintHandler(int sig_num)
+{
 
+    signal(SIGINT, sigintHandler);
+    no_reprint_prmpt = 1;
+    fflush(stdout);
+}
 void updateHistory(char *temp)
 {
 	/** Add commands to the history file as user enters them */
@@ -294,10 +303,17 @@ int main(){
     f = fopen("history.txt", "w+");
 	fclose(f);
 
+    no_reprint_prmpt = 0;
 
     while(isRunning){
+        no_reprint_prmpt = 0;
         //print the shell
-        shellPrompt();
+        signal(SIGINT, sigintHandler);
+        if (no_reprint_prmpt == 0)
+			shellPrompt();
+
+
+
         fflush(stdout); /*######*/
 
         fgets(input, 50, stdin);
