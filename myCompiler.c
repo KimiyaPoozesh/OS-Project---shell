@@ -6,14 +6,14 @@
 #include <ctype.h>
 #define MAX_WORDS   1000
 #define MAX_LINE    70 /*70 character max per line*/
-
+int histItems = 0;
 void shellPrompt(){
 	// We print the prompt
     //getcwd return the name of the currentDirectory
-    char* currentDirectory =  calloc(1024, sizeof(char));
-	char hostn[1204] = "";
-	gethostname(hostn, sizeof(hostn));
-	printf("%s@%s %s > ", getenv("LOGNAME"), hostn, getcwd(currentDirectory, 1024));
+    char cwd[1024];
+    getcwd(cwd, sizeof(cwd));
+    printf("\n%s>>", cwd);
+
 }
 
 int execute(char *command){
@@ -35,14 +35,18 @@ int execute(char *command){
 	}
     // we need to add null at the end of args so that we can use execvp
 	args[i] = NULL;
-    printf("%s",command);
     if (strcmp(command, "exit")==0){
         exit(0);
     }
 
     else if (strcmp(command, "help")==0)
 	{
-		printf("%s", "\nfirstword: prints the first word of the fil.\nmostrepeat: prints the most repeated word in the file.");
+		printf("\na : prints the first word of the file.\n"
+        "b : prints the most repeated word in the file.\n"
+        "c : Splits the first word of a line\n"
+         "f : Returns the most repeated word in a file\n"
+         "g : Deletes all spaces and prints the file\n"
+         "d : Shows all lines that are not comment. comments represented with #");
 		fflush(stdin);
 		fflush(stdout);
 		return 1;
@@ -54,12 +58,12 @@ int execute(char *command){
         }
         return 1;
     }
-    else if (strcmp(command, "firstword")==0){
-         firstword();
+    else if (strcmp(command, "a")==0){
+         a();
         return 1;
     }
-    else if (strcmp(command, "mostrepeat")==0){
-        mostrepeat();
+    else if (strcmp(command, "b")==0){
+        b();
         return 1;
     }
     else if (strcmp(command, "c")==0){
@@ -78,10 +82,35 @@ int execute(char *command){
         d();
         return 1;
     }
+    else if (!strcmp(command, "history")) { printHistory(); return 1; }
     //most common command
-    val = execvp(args[0], args);
+    val = execArgs(args);
     return val;
 }
+
+int execArgs(char** parsed)
+{
+    // Forking a child
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        printf("\nFailed forking child..");
+        return;
+    } else if (pid == 0) {
+        if (execvp(parsed[0], parsed) < 0) {
+
+            printf("\nCould not execute command..");
+            return 0;
+        }
+        exit(0);
+    } else {
+        // waiting for child to terminate
+        wait(NULL);
+        return 1;
+    }
+}
+
+
 int c(){
      int echo, chr;
     FILE* fp;
@@ -96,7 +125,7 @@ int c(){
         chr = fgetc (fp);
     }
 }
-int firstword() {
+int a() {
     int echo, chr;
     FILE* fp;
     char word[30];
@@ -112,7 +141,7 @@ int firstword() {
     fclose (fp);
     return 0;
 }
-int mostrepeat() {
+int b() {
     char path[100];
     int i, len, index, isUnique;
     char words[MAX_WORDS][50];
@@ -192,7 +221,8 @@ return 0;
 
 
 }
-int f(){
+int f()
+{
 FILE* file = fopen ("/home/kimiya/Desktop/os/test/mostrepeat.txt", "r");
 
 char line[500];
@@ -224,6 +254,32 @@ fclose(file);
 return 0;
 }
 
+void updateHistory(char *temp)
+{
+	/** Add commands to the history file as user enters them */
+
+	// DO NOT add to history if there is no command to add
+	if (!strcmp(temp, "") || !strcmp(temp, " ") || !strcmp(temp, "\n")) return;
+
+	// In all other cases, add to history, and update number of items in history
+	FILE *f = fopen("/home/kimiya/Desktop/os/history.txt", "a+");
+    histItems++;
+	fprintf(f, "%s", temp);
+	fclose(f);
+}
+void printHistory()
+{
+	FILE *f = fopen("/home/kimiya/Desktop/os/history.txt", "a+");
+	int i = 0;
+    char *line = NULL;
+    size_t len = 0;
+	for (i = 0; i < histItems; i++)
+	{
+		getline(&line, &len, f);
+
+		printf("%d %s", i+1, line);
+	}
+}
 
 int main(){
 
@@ -245,7 +301,7 @@ int main(){
         fflush(stdout); /*######*/
 
         fgets(input, 50, stdin);
-
+        updateHistory(input);
         pid = fork();
         if (pid<0){
             fprintf(stderr,"ERROR\n");
@@ -257,7 +313,7 @@ int main(){
             continue;
             }
             else{
-            printf(" this command is not supported");
+            printf("*");
             }
         }
         else //parent
