@@ -44,11 +44,11 @@ int execute(char *command){
 
     else if (strcmp(command, "help")==0)
 	{
-		printf("\na : prints the first word of the file.\n"
+		printf("\na : Splits the first word of a line.\n"
         "b : prints the most repeated word in the file.\n"
-        "c : Splits the first word of a line\n"
-         "f : Returns the most repeated word in a file\n"
-         "g : Deletes all spaces and prints the file\n"
+        "c : Deletes all spaces and prints the file\n"
+         "f : Shows the number of lines\n"
+         "g : Shows ten first line in a file\n"
          "d : Shows all lines that are not comment. comments represented with #");
 		fflush(stdin);
 		fflush(stdout);
@@ -97,12 +97,12 @@ int execArgs(char** parsed)
     pid_t pid = fork();
 
     if (pid == -1) {
-        printf("\nFailed forking child..");
+        fprintf(stderr, "\nFailed forking child..");
         return;
     } else if (pid == 0) {
         if (execvp(parsed[0], parsed) < 0) {
 
-            printf("\nCould not execute command..");
+            fprintf(stderr, "\nCould not execute command..");
             return 0;
         }
         exit(0);
@@ -188,7 +188,7 @@ int b() {
         }
     }
     fclose(fptr);
-    printf("\nOccurrences of all distinct words in file: \n");
+    printf("\nMost Repeated word in file: \n");
     int res = count[0];
     int in = 0;
     for (i=1; i<index; i++) {
@@ -256,6 +256,8 @@ printf("%s", line);}
 fclose(file);
 return 0;
 }
+
+//Signal handeling for ctrl+c
 void sigintHandler(int sig_num)
 {
 
@@ -320,7 +322,7 @@ int main(){
         updateHistory(input);
         pid = fork();
         if (pid<0){
-            fprintf(stderr,"ERROR\n");
+            fprintf(stderr,"Could not fork the child\n");
         }
         else if (pid==0){
 
@@ -334,7 +336,7 @@ int main(){
         }
         else //parent
         {
-            // Wait for child to finish execution unless user ends with '&' (reversing the original part of the problem)
+            // Wait for child to finish execution
 			lastPos = strlen(input) - 1;
             wait(NULL);
         }
